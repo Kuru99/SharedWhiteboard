@@ -746,15 +746,18 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           if (!paletteVisible) {
             style.display = 'none';
           }
+          // ensure values include px units when numeric
           if (pos.left === null) {
             style.left = '50%';
             style.transform = `translateX(-50%) scale(${paletteScale})`;
-            style.top = pos.top;
+            style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
           } else {
-            style.left = pos.left as any;
-            style.top = pos.top;
+            style.left = typeof pos.left === 'number' ? `${pos.left}px` : (pos.left as any);
+            style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
             style.transform = `translate(0,0) scale(${paletteScale})`;
           }
+          // make toolbar appear above header/other UI
+          style.zIndex = 2000;
           return style;
         })()}
         onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
@@ -924,7 +927,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           border-radius: 50px;
           border: 1px solid #e2e8f0;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-          z-index: 10;
+          z-index: 2000;
           flex-wrap: wrap;
           justify-content: center;
           max-width: 90%;
@@ -1026,7 +1029,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           position: absolute;
           right: 16px;
           top: 16px;
-          z-index: 60;
+          z-index: 2100;
           background: rgba(255,255,255,0.9);
           border: 1px solid #e2e8f0;
           padding: 6px 10px;
