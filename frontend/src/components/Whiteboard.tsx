@@ -107,6 +107,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   // Decide whether dragging should start when pointerdown occurs on toolbar.
   const shouldStartDrag = (e: React.PointerEvent) => {
+    // Only start drag for primary button (left click) or touch/pen interactions
+    if (!(e.button === 0 || e.pointerType === 'touch' || e.pointerType === 'pen')) return false;
+
     // If target is an interactive control, don't start drag
     let el: Element | null = e.target as Element | null;
     while (el && el !== document.body) {
