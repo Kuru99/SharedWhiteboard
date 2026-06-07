@@ -845,16 +845,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         })()}
         onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
       >
-        {/* ドラッグ用ハンドル（ボタン群とは別扱い） */}
-        <div
-          className="palette-handle"
-          onPointerDown={startPaletteDrag}
-          title="ドラッグして移動"
-          role="button"
-          aria-label="Drag toolbar"
-        >
-          ☰
-        </div>
+        {/* ボタンのない領域をドラッグすると移動します（ハンドル不要） */}
         {/* モード選択 */}
         <div className="tool-group">
           <button
@@ -1122,23 +1113,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         .palette-controls { position: absolute; right: 16px; top: 12px; z-index:2100; display:flex; gap:8px; }
         .palette-reset { background:#ef4444; color:white; border:none; padding:6px 8px; border-radius:8px; cursor:pointer }
         .palette-reset:hover { background:#dc2626 }
-        .palette-handle {
-          position: absolute;
-          left: 12px;
-          top: 12px;
-          width: 56px;
-          height: 56px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255,255,255,0.9);
-          border-radius: 12px;
-          cursor: grab;
-          user-select: none;
-          z-index: 2500;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .palette-handle:active { cursor: grabbing; }
         .palette-preview {
           width: auto;
           height: auto;
