@@ -90,7 +90,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const [paletteScale, setPaletteScale] = useState(1);
   const palettePosRef = useRef<{ top: number; left: number | null }>({ top: 20, left: null });
   const isDraggingRef = useRef(false);
-  const dragStartRef = useRef<{ x: number; y: number; startLeft: number | null; startTop: number } | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; startLeft: number | null; startTop: number; pointerId?: number } | null>(null);
+  const capturedElementRef = useRef<Element | null>(null);
 
   const startPaletteDrag = (e: React.PointerEvent) => {
     const clientX = e.clientX;
@@ -101,8 +102,20 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       y: clientY,
       startLeft: palettePosRef.current.left,
       startTop: palettePosRef.current.top,
+      pointerId: e.pointerId,
     };
-    (e.target as Element).setPointerCapture(e.pointerId);
+    try {
+      const el = e.currentTarget as Element | null;
+      if (el && (el as any).setPointerCapture) {
+        (el as any).setPointerCapture(e.pointerId);
+        capturedElementRef.current = el;
+      } else if ((e.target as Element) && (e.target as Element).setPointerCapture) {
+        (e.target as Element).setPointerCapture(e.pointerId);
+        capturedElementRef.current = e.target as Element;
+      }
+    } catch (err) {
+      // ignore
+    }
   };
 
   // Decide whether dragging should start when pointerdown occurs on toolbar.
@@ -137,6 +150,17 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   const endPaletteDrag = () => {
     isDraggingRef.current = false;
+    // release pointer capture if we captured it
+    try {
+      const el = capturedElementRef.current;
+      const pid = dragStartRef.current?.pointerId;
+      if (el && pid !== undefined && (el as any).releasePointerCapture) {
+        try { (el as any).releasePointerCapture(pid); } catch (e) { /* ignore */ }
+      }
+    } catch (e) {
+      // ignore
+    }
+    capturedElementRef.current = null;
     dragStartRef.current = null;
   };
 
