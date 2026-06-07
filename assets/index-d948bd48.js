@@ -177,18 +177,19 @@ Error generating stack: `+o.message+`
         .palette-reset:hover { background:#dc2626 }
         .palette-handle {
           position: absolute;
-          left: 8px;
-          top: 8px;
-          width: 28px;
-          height: 28px;
+          left: 12px;
+          top: 12px;
+          width: 56px;
+          height: 56px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(0,0,0,0.06);
-          border-radius: 6px;
+          background: rgba(255,255,255,0.9);
+          border-radius: 12px;
           cursor: grab;
           user-select: none;
-          z-index: 70;
+          z-index: 2500;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .palette-handle:active { cursor: grabbing; }
         /* タッチ向けにボタンを大きめに */
