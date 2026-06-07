@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #messages { border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="messages"></div>
+    <input type="text" id="input" placeholder="メッセージを入力...">
+    <button onclick="sendMessage()">送信</button>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8000/ws");
+        const messagesDiv = document.getElementById("messages");
+        const input = document.getElementById("input");
+
+        socket.onmessage = function(event) {
+            const msg = document.createElement("div");
+            msg.textContent = "受信: " + event.data;
+            messagesDiv.appendChild(msg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        };
+
+        socket.onopen = function() {
+            const msg = document.createElement("div");
+            msg.textContent = "システム: サーバーに接続しました";
+            messagesDiv.appendChild(msg);
+        };
+
+        function sendMessage() {
+            const text = input.value;
+            socket.send(text);
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
