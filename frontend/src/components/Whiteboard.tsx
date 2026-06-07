@@ -132,6 +132,38 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     };
   }, []);
 
+  // persist palette settings
+  const PALETTE_KEY = 'sharedwhiteboard_palette_v1';
+  const savePaletteSettings = () => {
+    try {
+      const data = {
+        visible: paletteVisible,
+        scale: paletteScale,
+        pos: palettePosRef.current,
+      } as any;
+      localStorage.setItem(PALETTE_KEY, JSON.stringify(data));
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PALETTE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (typeof d.visible === 'boolean') setPaletteVisible(d.visible);
+        if (typeof d.scale === 'number') setPaletteScale(d.scale);
+        if (d.pos && typeof d.pos.top === 'number') palettePosRef.current = { top: d.pos.top, left: d.pos.left ?? null };
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // save on changes
+  useEffect(() => savePaletteSettings(), [paletteVisible, paletteScale]);
+
   const getApiHost = () => {
     const envHost = import.meta.env.VITE_API_BASE_URL;
     if (envHost && envHost !== '') {
@@ -657,7 +689,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       {/* トグルボタン（パレットの表示/非表示） */}
       <button
         className="palette-toggle"
-        onClick={() => setPaletteVisible((v) => !v)}
+        onClick={() => { setPaletteVisible((v) => !v); savePaletteSettings(); }}
         title={paletteVisible ? 'ツールを非表示' : 'ツールを表示'}
       >
         {paletteVisible ? 'Hide' : 'Show'}
@@ -682,8 +714,17 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           }
           return style;
         })()}
-        onPointerDown={startPaletteDrag}
       >
+        {/* ドラッグ用ハンドル（ボタン群とは別扱い） */}
+        <div
+          className="palette-handle"
+          onPointerDown={startPaletteDrag}
+          title="ドラッグして移動"
+          role="button"
+          aria-label="Drag toolbar"
+        >
+          ☰
+        </div>
         {/* モード選択 */}
         <div className="tool-group">
           <button
@@ -936,6 +977,40 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           outline: none;
           padding: 2px 4px;
           font-family: sans-serif;
+        }
+        .palette-toggle {
+          position: absolute;
+          right: 16px;
+          top: 16px;
+          z-index: 60;
+          background: rgba(255,255,255,0.9);
+          border: 1px solid #e2e8f0;
+          padding: 6px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        .palette-handle {
+          position: absolute;
+          left: 8px;
+          top: 8px;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0,0,0,0.06);
+          border-radius: 6px;
+          cursor: grab;
+          user-select: none;
+          z-index: 70;
+        }
+        .palette-handle:active { cursor: grabbing; }
+        /* タッチ向けにボタンを大きめに */
+        .tool-btn, .action-btn, .clear-btn, .color-btn {
+          touch-action: manipulation;
+          min-width: 36px;
+          min-height: 36px;
+          padding: 8px;
         }
       `}</style>
     </div>
