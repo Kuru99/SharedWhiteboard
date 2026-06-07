@@ -798,11 +798,11 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
         {/* サイズ操作 */}
         <div className="tool-group">
-          <button className="tool-btn" onClick={() => setPaletteScale((s) => Math.max(0.6, s - 0.1))} title="小さく">
+          <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.max(0.6, s - 0.1))} title="小さく" aria-label="縮小">
             −
           </button>
           <span style={{ fontSize: '0.85rem', color: '#475569' }}>{Math.round(paletteScale * 100)}%</span>
-          <button className="tool-btn" onClick={() => setPaletteScale((s) => Math.min(1.6, s + 0.1))} title="大きく">
+          <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.min(1.6, s + 0.1))} title="大きく" aria-label="拡大">
             ＋
           </button>
         </div>
@@ -1055,6 +1055,18 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           min-width: 36px;
           min-height: 36px;
           padding: 8px;
+        }
+        .scale-btn {
+          background: #2563eb;
+          color: #fff;
+          border: none;
+          padding: 6px 10px;
+          border-radius: 8px;
+          font-weight: 600;
+          box-shadow: 0 2px 6px rgba(37,99,235,0.18);
+        }
+        .scale-btn:hover {
+          background: #1e40af;
         }
       `}</style>
     </div>
