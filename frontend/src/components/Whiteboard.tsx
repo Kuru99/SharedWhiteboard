@@ -105,6 +105,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     (e.target as Element).setPointerCapture(e.pointerId);
   };
 
+  // Decide whether dragging should start when pointerdown occurs on toolbar.
+  const shouldStartDrag = (e: React.PointerEvent) => {
+    // If target is an interactive control, don't start drag
+    let el: Element | null = e.target as Element | null;
+    while (el && el !== document.body) {
+      const tag = el.tagName && el.tagName.toUpperCase();
+      if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'A') return false;
+      const cls = el.classList || [];
+      if (cls.contains('tool-btn') || cls.contains('color-btn') || cls.contains('action-btn') || cls.contains('clear-btn') || cls.contains('width-slider')) return false;
+      // stop if we've reached the toolbar container
+      if (cls.contains('toolbar')) break;
+      el = el.parentElement;
+    }
+    return true;
+  };
+
   const onPalettePointerMove = (e: PointerEvent) => {
     if (!isDraggingRef.current || !dragStartRef.current) return;
     const dx = e.clientX - dragStartRef.current.x;
@@ -714,6 +730,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           }
           return style;
         })()}
+        onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
       >
         {/* ドラッグ用ハンドル（ボタン群とは別扱い） */}
         <div
