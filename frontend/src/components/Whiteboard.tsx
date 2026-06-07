@@ -91,6 +91,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const palettePosRef = useRef<{ top: number; left: number | null }>({ top: 20, left: null });
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; startLeft: number | null; startTop: number; pointerId?: number } | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
   const capturedElementRef = useRef<Element | null>(null);
 
   const startPaletteDrag = (e: React.PointerEvent) => {
@@ -104,6 +105,26 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       startTop: palettePosRef.current.top,
       pointerId: e.pointerId,
     };
+    // create drag preview element so we only commit position on pointerup
+    try {
+      if (!previewRef.current) {
+        const preview = document.createElement('div');
+        preview.className = 'palette-preview';
+        preview.style.position = 'absolute';
+        preview.style.pointerEvents = 'none';
+        preview.style.opacity = '0.9';
+        preview.style.zIndex = '2499';
+        // initial placement
+        const left = (palettePosRef.current.left === null) ? (window.innerWidth / 2) : (palettePosRef.current.left as number);
+        preview.style.left = `${left}px`;
+        preview.style.top = `${palettePosRef.current.top}px`;
+        preview.style.transform = `translate(0,0) scale(${paletteScale})`;
+        document.body.appendChild(preview);
+        previewRef.current = preview;
+      }
+    } catch (err) {
+      // ignore
+    }
     try {
       const el = e.currentTarget as Element | null;
       if (el && (el as any).setPointerCapture) {
@@ -143,13 +164,51 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     const dy = e.clientY - dragStartRef.current.y;
     const newLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
     const newTop = Math.max(0, dragStartRef.current.startTop + dy);
-    palettePosRef.current = { top: newTop, left: newLeft };
-    // force update by updating scale state with same value
-    setPaletteScale((s) => s);
+    // move preview only; commit on pointerup
+    try {
+      if (previewRef.current) {
+        previewRef.current.style.left = `${newLeft}px`;
+        previewRef.current.style.top = `${newTop}px`;
+      }
+    } catch (err) {
+      // ignore
+    }
   };
 
-  const endPaletteDrag = () => {
+  const endPaletteDrag = (e?: PointerEvent) => {
+    if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
+    // compute final position (use preview position if available)
+    let finalLeft: number | null = palettePosRef.current.left;
+    let finalTop: number = palettePosRef.current.top;
+    try {
+      if (previewRef.current) {
+        const pl = parseFloat(previewRef.current.style.left || '0');
+        const pt = parseFloat(previewRef.current.style.top || '0');
+        finalLeft = isNaN(pl) ? finalLeft : pl;
+        finalTop = isNaN(pt) ? finalTop : pt;
+      } else if (e && dragStartRef.current) {
+        const dx = e.clientX - dragStartRef.current.x;
+        const dy = e.clientY - dragStartRef.current.y;
+        finalLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
+        finalTop = Math.max(0, dragStartRef.current.startTop + dy);
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    // commit position
+    palettePosRef.current = { top: finalTop, left: finalLeft };
+    // remove preview
+    try {
+      if (previewRef.current && previewRef.current.parentElement) {
+        previewRef.current.parentElement.removeChild(previewRef.current);
+      }
+    } catch (err) {
+      // ignore
+    }
+    previewRef.current = null;
+
     // release pointer capture if we captured it
     try {
       const el = capturedElementRef.current;
@@ -162,6 +221,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     }
     capturedElementRef.current = null;
     dragStartRef.current = null;
+
+    // force update and persist
+    setPaletteScale((s) => s);
+    savePaletteSettings();
   };
 
   useEffect(() => {
@@ -1076,6 +1139,16 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .palette-handle:active { cursor: grabbing; }
+        .palette-preview {
+          width: auto;
+          height: auto;
+          background: rgba(255,255,255,0.95);
+          border-radius: 12px;
+          box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+          transition: transform 0.08s linear;
+          padding: 8px;
+          display: inline-block;
+        }
         /* タッチ向けにボタンを大きめに */
         .tool-btn, .action-btn, .clear-btn, .color-btn {
           touch-action: manipulation;
