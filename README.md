@@ -128,5 +128,4 @@ MIT License
 ## 👤 作者
 
 - **kuru99**
-- SharedWhiteboard
 
