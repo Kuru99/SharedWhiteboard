@@ -85,6 +85,53 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     }
   }, [textInput]);
 
+  // パレット（ツールバー）制御: 表示 / 位置 / サイズ
+  const [paletteVisible, setPaletteVisible] = useState(true);
+  const [paletteScale, setPaletteScale] = useState(1);
+  const palettePosRef = useRef<{ top: number; left: number | null }>({ top: 20, left: null });
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{ x: number; y: number; startLeft: number | null; startTop: number } | null>(null);
+
+  const startPaletteDrag = (e: React.PointerEvent) => {
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    isDraggingRef.current = true;
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      startLeft: palettePosRef.current.left,
+      startTop: palettePosRef.current.top,
+    };
+    (e.target as Element).setPointerCapture(e.pointerId);
+  };
+
+  const onPalettePointerMove = (e: PointerEvent) => {
+    if (!isDraggingRef.current || !dragStartRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    const newLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
+    const newTop = Math.max(0, dragStartRef.current.startTop + dy);
+    palettePosRef.current = { top: newTop, left: newLeft };
+    // force update by updating scale state with same value
+    setPaletteScale((s) => s);
+  };
+
+  const endPaletteDrag = () => {
+    isDraggingRef.current = false;
+    dragStartRef.current = null;
+  };
+
+  useEffect(() => {
+    window.addEventListener('pointermove', onPalettePointerMove);
+    window.addEventListener('pointerup', endPaletteDrag);
+    window.addEventListener('pointercancel', endPaletteDrag);
+    return () => {
+      window.removeEventListener('pointermove', onPalettePointerMove);
+      window.removeEventListener('pointerup', endPaletteDrag);
+      window.removeEventListener('pointercancel', endPaletteDrag);
+    };
+  }, []);
+
   const getApiHost = () => {
     const envHost = import.meta.env.VITE_API_BASE_URL;
     if (envHost && envHost !== '') {
@@ -607,7 +654,36 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   return (
     <div className="whiteboard-wrapper">
       {/* ツールバー */}
-      <div className="toolbar">
+      {/* トグルボタン（パレットの表示/非表示） */}
+      <button
+        className="palette-toggle"
+        onClick={() => setPaletteVisible((v) => !v)}
+        title={paletteVisible ? 'ツールを非表示' : 'ツールを表示'}
+      >
+        {paletteVisible ? 'Hide' : 'Show'}
+      </button>
+
+      <div
+        className="toolbar"
+        style={(() => {
+          const pos = palettePosRef.current;
+          const style: React.CSSProperties = {};
+          if (!paletteVisible) {
+            style.display = 'none';
+          }
+          if (pos.left === null) {
+            style.left = '50%';
+            style.transform = `translateX(-50%) scale(${paletteScale})`;
+            style.top = pos.top;
+          } else {
+            style.left = pos.left as any;
+            style.top = pos.top;
+            style.transform = `translate(0,0) scale(${paletteScale})`;
+          }
+          return style;
+        })()}
+        onPointerDown={startPaletteDrag}
+      >
         {/* モード選択 */}
         <div className="tool-group">
           <button
@@ -630,6 +706,19 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
             title="テキスト入力"
           >
             🔤
+          </button>
+        </div>
+
+        <div className="divider" />
+
+        {/* サイズ操作 */}
+        <div className="tool-group">
+          <button className="tool-btn" onClick={() => setPaletteScale((s) => Math.max(0.6, s - 0.1))} title="小さく">
+            −
+          </button>
+          <span style={{ fontSize: '0.85rem', color: '#475569' }}>{Math.round(paletteScale * 100)}%</span>
+          <button className="tool-btn" onClick={() => setPaletteScale((s) => Math.min(1.6, s + 0.1))} title="大きく">
+            ＋
           </button>
         </div>
 
