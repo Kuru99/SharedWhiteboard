@@ -114,6 +114,7 @@ npm run build
 - `frontend/.env` に API / WebSocket の公開 URL を指定してください
 - GitHub Pages は静的ファイルのみ公開可能です
 - バックエンドは別途クラウドサービスで公開してください
+- パレッドの挙動がおかしいので修正中
 
 ---
 
