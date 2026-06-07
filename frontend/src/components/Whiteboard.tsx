@@ -207,6 +207,17 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   // save on changes
   useEffect(() => savePaletteSettings(), [paletteVisible, paletteScale]);
 
+  const resetPaletteToDefault = () => {
+    try {
+      localStorage.removeItem(PALETTE_KEY);
+    } catch (e) {}
+    palettePosRef.current = { top: 20, left: null };
+    setPaletteScale(1);
+    setPaletteVisible(true);
+    // small state update to force style recalculation
+    setPaletteScale((s) => s);
+  };
+
   const getApiHost = () => {
     const envHost = import.meta.env.VITE_API_BASE_URL;
     if (envHost && envHost !== '') {
@@ -730,13 +741,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     <div className="whiteboard-wrapper">
       {/* ツールバー */}
       {/* トグルボタン（パレットの表示/非表示） */}
-      <button
-        className="palette-toggle"
-        onClick={() => { setPaletteVisible((v) => !v); savePaletteSettings(); }}
-        title={paletteVisible ? 'ツールを非表示' : 'ツールを表示'}
-      >
-        {paletteVisible ? 'Hide' : 'Show'}
-      </button>
+      <div className="palette-controls">
+        <button
+          className="palette-toggle"
+          onClick={() => { setPaletteVisible((v) => !v); savePaletteSettings(); }}
+          title={paletteVisible ? 'ツールを非表示' : 'ツールを表示'}
+        >
+          {paletteVisible ? 'Hide' : 'Show'}
+        </button>
+        <button
+          className="palette-reset"
+          onClick={resetPaletteToDefault}
+          title="パレットをリセット"
+        >
+          Reset
+        </button>
+      </div>
 
       <div
         className="toolbar"
@@ -1036,6 +1056,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           border-radius: 8px;
           cursor: pointer;
         }
+        .palette-controls { position: absolute; right: 16px; top: 12px; z-index:2100; display:flex; gap:8px; }
+        .palette-reset { background:#ef4444; color:white; border:none; padding:6px 8px; border-radius:8px; cursor:pointer }
+        .palette-reset:hover { background:#dc2626 }
         .palette-handle {
           position: absolute;
           left: 8px;
