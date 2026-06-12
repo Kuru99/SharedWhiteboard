@@ -64,6 +64,19 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const panOffsetRef = useRef({ x: 0, y: 0 });
   const rafRef = useRef<number | null>(null);
 
+  // 送信キュー
+  const messageQueueRef = useRef<string[]>([]);
+
+  // メッセージ送信ヘルパー
+  const sendMessage = (msgObj: any) => {
+    const msgStr = JSON.stringify(msgObj);
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(msgStr);
+    } else {
+      messageQueueRef.current.push(msgStr);
+    }
+  };
+
   // テキスト入力オーバーレイ用の状態
   const inputRef = useRef<HTMLInputElement>(null);
   const [textInput, setTextInput] = useState<{
@@ -271,6 +284,16 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     connectionIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const socket = new WebSocket(`${wsHost}/ws?boardId=${boardId}`);
     socketRef.current = socket;
+
+    socket.onopen = () => {
+      // 送信待ちのキューがあれば一気に送信する
+      while (messageQueueRef.current.length > 0) {
+        const msg = messageQueueRef.current.shift();
+        if (msg && socketRef.current?.readyState === WebSocket.OPEN) {
+          socketRef.current.send(msg);
+        }
+      }
+    };
 
     socket.onmessage = (event) => {
       try {
@@ -575,22 +598,18 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       };
 
       // WebSocketで送信（ワールド座標をそのまま送信）
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: 'draw_step',
-            clientId: clientIdRef.current,
-            connectionId: connectionIdRef.current,
-            id: lineId,
-            x0: lastPos.current.x,
-            y0: lastPos.current.y,
-            x1: worldPos.x,
-            y1: worldPos.y,
-            color: strokeColor,
-            width: strokeWidth,
-          })
-        );
-      }
+      sendMessage({
+        type: 'draw_step',
+        clientId: clientIdRef.current,
+        connectionId: connectionIdRef.current,
+        id: lineId,
+        x0: lastPos.current.x,
+        y0: lastPos.current.y,
+        x1: worldPos.x,
+        y1: worldPos.y,
+        color: strokeColor,
+        width: strokeWidth,
+      });
     }
 
     lastPos.current = worldPos;
@@ -680,21 +699,17 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
       setElements((prev) => [...prev, newText]);
 
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: 'text',
-            clientId: clientIdRef.current,
-            connectionId: connectionIdRef.current,
-            id: textId,
-            x: textInput.worldX,
-            y: textInput.worldY,
-            text: textValue,
-            color: color,
-            fontSize: fontSize,
-          })
-        );
-      }
+      sendMessage({
+        type: 'text',
+        clientId: clientIdRef.current,
+        connectionId: connectionIdRef.current,
+        id: textId,
+        x: textInput.worldX,
+        y: textInput.worldY,
+        text: textValue,
+        color: color,
+        fontSize: fontSize,
+      });
     }
 
     setTextInput(null);
@@ -710,30 +725,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
     setElements((prev) => prev.slice(0, -1));
 
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(
-        JSON.stringify({
-          type: 'undo',
-          clientId: clientIdRef.current,
-          connectionId: connectionIdRef.current,
-          id: lastElement.id,
-        })
-      );
-    }
+    sendMessage({
+      type: 'undo',
+      clientId: clientIdRef.current,
+      connectionId: connectionIdRef.current,
+      id: lastElement.id,
+    });
   };
 
   const handleClear = () => {
     if (window.confirm("本当にキャンバス全体を消去しますか？")) {
       setElements([]);
-      if (socketRef.current?.readyState === WebSocket.OPEN) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: 'clear',
-            clientId: clientIdRef.current,
-            connectionId: connectionIdRef.current,
-          })
-        );
-      }
+      sendMessage({
+        type: 'clear',
+        clientId: clientIdRef.current,
+        connectionId: connectionIdRef.current,
+      });
     }
   };
 
