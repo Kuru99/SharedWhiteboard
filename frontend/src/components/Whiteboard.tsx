@@ -769,8 +769,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           className="palette-toggle"
           onClick={() => { setPaletteVisible(true); savePaletteSettings(); }}
           title="ツールを表示"
+          style={{ background: '#2563eb', color: 'white', fontWeight: 'bold', border: 'none' }}
         >
-          Show
+          表示
         </button>
       )}
 
@@ -815,9 +816,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
             className="tool-btn"
             onClick={() => { setPaletteVisible(false); savePaletteSettings(); }}
             title="ツールを非表示"
-            style={{ fontSize: '0.9rem', fontWeight: 'bold' }}
+            style={{ fontSize: '0.9rem', fontWeight: 'bold', background: '#2563eb', color: 'white' }}
           >
-            Hide
+            非表示
           </button>
         </div>
 
