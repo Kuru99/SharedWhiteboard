@@ -163,4 +163,110 @@ main {
   font-size: 1.1rem;
   max-width: 600px;
   line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.tutorial-btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-btn:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.tutorial-btn:active {
+  transform: translateY(1px);
+}
+
+.tutorial-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  padding: 1rem;
+}
+
+.tutorial-modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: left;
+  animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.tutorial-modal-content h3 {
+  margin-top: 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.tutorial-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+}
+
+.tutorial-list li {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  color: #334155;
+  font-size: 1.05rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.tutorial-list li::before {
+  content: "•";
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.5rem;
+  position: absolute;
+  left: 0;
+  top: -4px;
+}
+
+.tutorial-list li strong {
+  color: #0f172a;
+}
+
+.tutorial-close-btn {
+  width: 100%;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tutorial-close-btn:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
 }

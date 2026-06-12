@@ -8,6 +8,7 @@ function App() {
     return sessionStorage.getItem('sharedwhiteboard_session_board') || ''
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [tutorialOpen, setTutorialOpen] = useState(false)
 
   useEffect(() => {
     if (selectedBoardId) {
@@ -55,6 +56,31 @@ function App() {
             <div className="welcome-screen">
               <h2>Shared Whiteboard へようこそ！</h2>
               <p>左上の「☰」メニューを開いて、ホワイトボードを選択または新規作成してください。</p>
+
+              <button 
+                className="tutorial-btn"
+                onClick={() => setTutorialOpen(true)}
+              >
+                📖 操作チュートリアルを見る
+              </button>
+
+              {tutorialOpen && (
+                <div className="tutorial-modal-overlay" onClick={() => setTutorialOpen(false)}>
+                  <div className="tutorial-modal-content" onClick={(e) => e.stopPropagation()}>
+                    <h3>🎨 操作チュートリアル</h3>
+                    <ul className="tutorial-list">
+                      <li><strong>基本操作:</strong> 左上の「☰」からボードを選んでお絵描きスタート！</li>
+                      <li><strong>パレットの移動:</strong> パレット内の「🔒」を押して「🔓」にすると、自由にドラッグして移動できます。</li>
+                      <li><strong>ツールの非表示:</strong> パレットが邪魔な時は「非表示」をタップ。画面右上の「表示」で元に戻せます。</li>
+                      <li><strong>テキスト入力:</strong> 「🔤」を選んで画面をタップすると、文字を入力できます。</li>
+                      <li><strong>画面の移動（パン）:</strong> PCは右クリックや中ボタンでのドラッグ、スマホは「2本指」でのドラッグで画面を移動できます。</li>
+                    </ul>
+                    <button className="tutorial-close-btn" onClick={() => setTutorialOpen(false)}>
+                      閉じる
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>
