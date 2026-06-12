@@ -1,12 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Whiteboard from './components/Whiteboard'
 import BoardSelector from './components/BoardSelector'
 import './App.css'
 
 function App() {
-  const [selectedBoardId, setSelectedBoardId] = useState('')
+  const [selectedBoardId, setSelectedBoardId] = useState(() => {
+    return localStorage.getItem('sharedwhiteboard_last_board') || ''
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  useEffect(() => {
+    if (selectedBoardId) {
+      localStorage.setItem('sharedwhiteboard_last_board', selectedBoardId)
+    } else {
+      localStorage.removeItem('sharedwhiteboard_last_board')
+    }
+  }, [selectedBoardId])
   return (
     <div className="app-container">
       <header className="app-header">
