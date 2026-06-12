@@ -31,7 +31,14 @@ function App() {
           </button>
           <h1>Shared Whiteboard</h1>
         </div>
-        <div className="status-indicator">
+        <div className="status-indicator" style={{ display: 'flex', alignItems: 'center' }}>
+          <button 
+            onClick={() => window.location.reload()}
+            title="ページを再読み込み"
+            style={{ marginRight: '15px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            🔄 更新
+          </button>
           <span className="dot"></span>
           Live
         </div>
@@ -69,11 +76,12 @@ function App() {
                   <div className="tutorial-modal-content" onClick={(e) => e.stopPropagation()}>
                     <h3>🎨 操作チュートリアル</h3>
                     <ul className="tutorial-list">
-                      <li><strong>基本操作:</strong> 左上の「☰」からボードを選んでお絵描きスタート！</li>
-                      <li><strong>パレットの移動:</strong> パレット内の「🔒」を押して「🔓」にすると、自由にドラッグして移動できます。</li>
-                      <li><strong>ツールの非表示:</strong> パレットが邪魔な時は「非表示」をタップ。画面右上の「表示」で元に戻せます。</li>
-                      <li><strong>テキスト入力:</strong> 「🔤」を選んで画面をタップすると、文字を入力できます。</li>
-                      <li><strong>画面の移動（パン）:</strong> PCは右クリックや中ボタンでのドラッグ、スマホは「2本指」でのドラッグで画面を移動できます。</li>
+                      <li><strong>基本操作:</strong> 左上の「☰」からボードを作成，または選択してお絵描きスタート！</li>
+                      <li><strong>パレットの移動:</strong> パレット内の「🔒」を押すと，パレットが移動モードになり，自由にドラッグして移動できます．</li>
+                      <li><strong>ツールの非表示:</strong> パレットが邪魔な時は「非表示」をタップ．画面右上の「表示」で元に戻せます．</li>
+                      <li><strong>画面の移動:</strong> PCは右クリックでドラッグ，スマホは「2本指」でのドラッグで画面を移動できます．</li>
+                      <li><strong>ペンと消しゴム:</strong> ✏️と🧽を押すと，それぞれ描画モードと消しゴムモードになります．</li>
+                      <li><strong>テキスト入力:</strong> 「🔤」をタップすると，文字をキーボード入力できるようになります．</li>
                     </ul>
                     <button className="tutorial-close-btn" onClick={() => setTutorialOpen(false)}>
                       閉じる
