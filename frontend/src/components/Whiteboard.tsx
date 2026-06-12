@@ -85,14 +85,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     }
   }, [textInput]);
 
-  // パレット（ツールバー）制御: 表示 / 位置 / サイズ
+  // パレット（ツールバー）制御: 表示 / 位置 / サイズ / 移動モード
   const [paletteVisible, setPaletteVisible] = useState(true);
   const [paletteScale, setPaletteScale] = useState(1);
+  const [isMovingMode, setIsMovingMode] = useState(false);
   const palettePosRef = useRef<{ top: number; left: number | null }>({ top: 20, left: null });
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number; startLeft: number | null; startTop: number; pointerId?: number } | null>(null);
-  const previewRef = useRef<HTMLDivElement | null>(null);
   const capturedElementRef = useRef<Element | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   const startPaletteDrag = (e: React.PointerEvent) => {
     const clientX = e.clientX;
@@ -105,26 +106,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       startTop: palettePosRef.current.top,
       pointerId: e.pointerId,
     };
-    // create drag preview element so we only commit position on pointerup
-    try {
-      if (!previewRef.current) {
-        const preview = document.createElement('div');
-        preview.className = 'palette-preview';
-        preview.style.position = 'absolute';
-        preview.style.pointerEvents = 'none';
-        preview.style.opacity = '0.9';
-        preview.style.zIndex = '2499';
-        // initial placement
-        const left = (palettePosRef.current.left === null) ? (window.innerWidth / 2) : (palettePosRef.current.left as number);
-        preview.style.left = `${left}px`;
-        preview.style.top = `${palettePosRef.current.top}px`;
-        preview.style.transform = `translate(0,0) scale(${paletteScale})`;
-        document.body.appendChild(preview);
-        previewRef.current = preview;
-      }
-    } catch (err) {
-      // ignore
-    }
     try {
       const el = e.currentTarget as Element | null;
       if (el && (el as any).setPointerCapture) {
@@ -141,16 +122,19 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   // Decide whether dragging should start when pointerdown occurs on toolbar.
   const shouldStartDrag = (e: React.PointerEvent) => {
+    // Only allow drag if moving mode is enabled
+    if (!isMovingMode) return false;
+    
     // Only start drag for primary button (left click) or touch/pen interactions
     if (!(e.button === 0 || e.pointerType === 'touch' || e.pointerType === 'pen')) return false;
 
-    // If target is an interactive control, don't start drag
+    // If target is an interactive control (including the moving mode button), don't start drag
     let el: Element | null = e.target as Element | null;
     while (el && el !== document.body) {
       const tag = el.tagName && el.tagName.toUpperCase();
       if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'A') return false;
       const cls = el.classList || [];
-      if (cls.contains('tool-btn') || cls.contains('color-btn') || cls.contains('action-btn') || cls.contains('clear-btn') || cls.contains('width-slider')) return false;
+      if (cls.contains('tool-btn') || cls.contains('color-btn') || cls.contains('action-btn') || cls.contains('clear-btn') || cls.contains('width-slider') || cls.contains('move-mode-btn')) return false;
       // stop if we've reached the toolbar container
       if (cls.contains('toolbar')) break;
       el = el.parentElement;
@@ -164,50 +148,34 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     const dy = e.clientY - dragStartRef.current.y;
     const newLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
     const newTop = Math.max(0, dragStartRef.current.startTop + dy);
-    // move preview only; commit on pointerup
-    try {
-      if (previewRef.current) {
-        previewRef.current.style.left = `${newLeft}px`;
-        previewRef.current.style.top = `${newTop}px`;
-      }
-    } catch (err) {
-      // ignore
+    // Reactの再レンダリングを回避するため、DOMを直接操作して追従させる
+    if (toolbarRef.current) {
+      toolbarRef.current.style.left = `${newLeft}px`;
+      toolbarRef.current.style.top = `${newTop}px`;
     }
   };
 
   const endPaletteDrag = (e?: PointerEvent) => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    // compute final position (use preview position if available)
+    // compute final position
     let finalLeft: number | null = palettePosRef.current.left;
     let finalTop: number = palettePosRef.current.top;
-    try {
-      if (previewRef.current) {
-        const pl = parseFloat(previewRef.current.style.left || '0');
-        const pt = parseFloat(previewRef.current.style.top || '0');
-        finalLeft = isNaN(pl) ? finalLeft : pl;
-        finalTop = isNaN(pt) ? finalTop : pt;
-      } else if (e && dragStartRef.current) {
-        const dx = e.clientX - dragStartRef.current.x;
-        const dy = e.clientY - dragStartRef.current.y;
-        finalLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
-        finalTop = Math.max(0, dragStartRef.current.startTop + dy);
-      }
-    } catch (err) {
-      // ignore
+    
+    if (toolbarRef.current) {
+      const pl = parseFloat(toolbarRef.current.style.left || '0');
+      const pt = parseFloat(toolbarRef.current.style.top || '0');
+      finalLeft = isNaN(pl) ? finalLeft : pl;
+      finalTop = isNaN(pt) ? finalTop : pt;
+    } else if (e && dragStartRef.current) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      finalLeft = (dragStartRef.current.startLeft ?? window.innerWidth / 2) + dx;
+      finalTop = Math.max(0, dragStartRef.current.startTop + dy);
     }
 
     // commit position
     palettePosRef.current = { top: finalTop, left: finalLeft };
-    // remove preview
-    try {
-      if (previewRef.current && previewRef.current.parentElement) {
-        previewRef.current.parentElement.removeChild(previewRef.current);
-      }
-    } catch (err) {
-      // ignore
-    }
-    previewRef.current = null;
 
     // release pointer capture if we captured it
     try {
@@ -246,6 +214,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         visible: paletteVisible,
         scale: paletteScale,
         pos: palettePosRef.current,
+        isMovingMode: isMovingMode,
       } as any;
       localStorage.setItem(PALETTE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -261,6 +230,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         if (typeof d.visible === 'boolean') setPaletteVisible(d.visible);
         if (typeof d.scale === 'number') setPaletteScale(d.scale);
         if (d.pos && typeof d.pos.top === 'number') palettePosRef.current = { top: d.pos.top, left: d.pos.left ?? null };
+        if (typeof d.isMovingMode === 'boolean') setIsMovingMode(d.isMovingMode);
       }
     } catch (e) {
       // ignore
@@ -268,7 +238,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   }, []);
 
   // save on changes
-  useEffect(() => savePaletteSettings(), [paletteVisible, paletteScale]);
+  useEffect(() => savePaletteSettings(), [paletteVisible, paletteScale, isMovingMode]);
 
   const resetPaletteToDefault = () => {
     try {
@@ -803,8 +773,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   return (
     <div className="whiteboard-wrapper">
       {/* ツールバー */}
-      {/* トグルボタン（パレットの表示/非表示） */}
+      {/* トグルボタン（パレットの表示/非表示、移動モード） */}
       <div className="palette-controls">
+        <button
+          className={`move-mode-btn ${isMovingMode ? 'active' : ''}`}
+          onClick={() => setIsMovingMode((m) => !m)}
+          title={isMovingMode ? 'ツール移動モード: ON（ツールバーをドラッグで移動、クリックで OFF）' : 'ツール移動モード: OFF（クリックで ON）'}
+        >
+          {isMovingMode ? '🔓' : '🔒'}
+        </button>
         <button
           className="palette-toggle"
           onClick={() => { setPaletteVisible((v) => !v); savePaletteSettings(); }}
@@ -822,6 +799,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
       </div>
 
       <div
+        ref={toolbarRef}
         className="toolbar"
         style={(() => {
           const pos = palettePosRef.current;
@@ -1111,6 +1089,24 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           cursor: pointer;
         }
         .palette-controls { position: absolute; right: 16px; top: 12px; z-index:2100; display:flex; gap:8px; }
+        .move-mode-btn {
+          background: rgba(255,255,255,0.9);
+          border: 2px solid #e2e8f0;
+          padding: 6px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.2s ease;
+        }
+        .move-mode-btn.active {
+          background: #fbbf24;
+          border-color: #f59e0b;
+          box-shadow: 0 0 8px rgba(245,158,11,0.5);
+        }
+        .move-mode-btn:hover {
+          background: rgba(255,255,255,1);
+          border-color: #cbd5e1;
+        }
         .palette-reset { background:#ef4444; color:white; border:none; padding:6px 8px; border-radius:8px; cursor:pointer }
         .palette-reset:hover { background:#dc2626 }
         .palette-preview {
