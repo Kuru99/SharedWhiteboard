@@ -806,7 +806,12 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         <div className="tool-group">
           <button
             className={`tool-btn ${isMovingMode ? 'active' : ''}`}
-            onClick={() => setIsMovingMode((m) => !m)}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setIsMovingMode((m) => !m);
+            }}
+            onClick={(e) => e.preventDefault()}
             title={isMovingMode ? '移動モード: ON（パレットをドラッグ可能）' : '移動モード: OFF（クリックしてON）'}
             style={{ fontSize: '1.2rem', padding: '0.4rem' }}
           >
@@ -983,6 +988,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           flex-wrap: wrap;
           justify-content: center;
           max-width: 90%;
+          touch-action: none;
         }
         .tool-group {
           display: flex;
