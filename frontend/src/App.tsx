@@ -48,6 +48,13 @@ function App() {
         </div>
         <div className="status-indicator" style={{ display: 'flex', alignItems: 'center' }}>
           <button 
+            onClick={() => setSelectedBoardId('')}
+            title="ホームに戻る"
+            style={{ marginRight: '10px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            🏠 ホーム
+          </button>
+          <button 
             onClick={() => window.location.reload()}
             title="ページを再読み込み"
             style={{ marginRight: '15px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
