@@ -4,8 +4,8 @@ import BoardSelector from './components/BoardSelector'
 import './App.css'
 
 function App() {
-  const [selectedBoardId, setSelectedBoardId] = useState('default')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [selectedBoardId, setSelectedBoardId] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="app-container">
@@ -39,7 +39,14 @@ function App() {
         </aside>
         {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
         <main>
-          <Whiteboard boardId={selectedBoardId} />
+          {selectedBoardId ? (
+            <Whiteboard boardId={selectedBoardId} />
+          ) : (
+            <div className="welcome-screen">
+              <h2>Shared Whiteboard へようこそ！</h2>
+              <p>左上の「☰」メニューを開いて、ホワイトボードを選択または新規作成してください。</p>
+            </div>
+          )}
         </main>
       </div>
     </div>

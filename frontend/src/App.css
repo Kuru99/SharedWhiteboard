@@ -140,3 +140,27 @@ main {
     min-height: 0;
   }
 }
+
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem;
+  color: #475569;
+  background: #f8fafc;
+}
+
+.welcome-screen h2 {
+  font-size: 2rem;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.welcome-screen p {
+  font-size: 1.1rem;
+  max-width: 600px;
+  line-height: 1.6;
+}
