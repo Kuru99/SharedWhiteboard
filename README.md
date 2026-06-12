@@ -7,7 +7,7 @@
 
 ---
 
-## ⭐ 特徴
+## 特徴
 
 - リアルタイム描画共有
 - WebSocket ベースの双方向通信
@@ -18,7 +18,7 @@
 
 ---
 
-## 📁 リポジトリ構成
+## リポジトリ構成
 
 - `backend/`
   - Go サーバー
@@ -33,7 +33,7 @@
 
 ---
 
-## 🚀 ローカル開発のセットアップ
+## ローカル開発のセットアップ
 
 ### 1. 事前準備
 
@@ -67,41 +67,17 @@ npm run dev
 
 ---
 
-## 🌐 公開構成 (GitHub Pages + Railway)
+## 公開構成 (GitHub Pages + Railway)
 
 このプロジェクトは次のような公開構成を想定しています。
 
 - フロントエンド: GitHub Pages
 - バックエンド: Railway などのクラウドサービス
-- Redis: Railway プラグインまたは外部 Redis
-
-### フロントエンド公開手順
-
-1. GitHub リポジトリを作成
-2. `frontend/.env.example` を `frontend/.env` にコピー
-3. `VITE_API_BASE_URL` と `VITE_WS_BASE_URL` をバックエンドの公開 URL に変更
-4. `frontend` でビルド
-
-```bash
-cd frontend
-npm install
-npm run build
-```
-
-5. `frontend/dist` に生成された静的ファイルを GitHub Pages へデプロイ
-
-### バックエンド公開手順
-
-1. Railway などにリポジトリを接続
-2. Redis を有効化
-3. 環境変数を設定
-   - `PORT`
-   - `REDIS_URL` または `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
-4. デプロイ後に発行される URL を `frontend/.env` に設定
+- Redis: Railway プラグインまたは外部Redis
 
 ---
 
-## 🧠 アーキテクチャ
+## アーキテクチャ
 
 - クライアントは WebSocket で Go サーバーに接続
 - サーバーは受信した描画イベントを Redis Pub/Sub 経由で他インスタンスへ転送
@@ -109,17 +85,16 @@ npm run build
 
 ---
 
-## 📌 注意点
+## 注意点
 
 - `frontend/.env` に API / WebSocket の公開 URL を指定してください
 - GitHub Pages は静的ファイルのみ公開可能です
 - バックエンドは別途クラウドサービスで公開してください
-- パレッドの挙動がおかしいので修正中6/7
-- 応急措置としてパレットリセットボタンの作成
+- パレッドの挙動修正完了6/12
 
 ---
 
-## 📄 ライセンス
+## ライセンス
 
 MIT License
 
