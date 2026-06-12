@@ -73,31 +73,7 @@ npm run dev
 
 - フロントエンド: GitHub Pages
 - バックエンド: Railway などのクラウドサービス
-- Redis: Railway プラグインまたは外部 Redis
-
-### フロントエンド公開手順
-
-1. GitHub リポジトリを作成
-2. `frontend/.env.example` を `frontend/.env` にコピー
-3. `VITE_API_BASE_URL` と `VITE_WS_BASE_URL` をバックエンドの公開 URL に変更
-4. `frontend` でビルド
-
-```bash
-cd frontend
-npm install
-npm run build
-```
-
-5. `frontend/dist` に生成された静的ファイルを GitHub Pages へデプロイ
-
-### バックエンド公開手順
-
-1. Railway などにリポジトリを接続
-2. Redis を有効化
-3. 環境変数を設定
-   - `PORT`
-   - `REDIS_URL` または `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
-4. デプロイ後に発行される URL を `frontend/.env` に設定
+- Redis: Railway プラグインまたは外部Redis
 
 ---
 
