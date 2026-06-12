@@ -240,16 +240,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   // save on changes
   useEffect(() => savePaletteSettings(), [paletteVisible, paletteScale, isMovingMode]);
 
-  const resetPaletteToDefault = () => {
-    try {
-      localStorage.removeItem(PALETTE_KEY);
-    } catch (e) {}
-    palettePosRef.current = { top: 20, left: null };
-    setPaletteScale(1);
-    setPaletteVisible(true);
-    // small state update to force style recalculation
-    setPaletteScale((s) => s);
-  };
+
 
   const getApiHost = () => {
     const envHost = import.meta.env.VITE_API_BASE_URL;
@@ -772,32 +763,18 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   return (
     <div className="whiteboard-wrapper">
-      {/* ツールバー */}
-      {/* トグルボタン（パレットの表示/非表示、移動モード） */}
-      <div className="palette-controls">
-        <button
-          className={`move-mode-btn ${isMovingMode ? 'active' : ''}`}
-          onClick={() => setIsMovingMode((m) => !m)}
-          title={isMovingMode ? 'ツール移動モード: ON（ツールバーをドラッグで移動、クリックで OFF）' : 'ツール移動モード: OFF（クリックで ON）'}
-        >
-          {isMovingMode ? '🔓' : '🔒'}
-        </button>
+      {/* 非表示時の再表示ボタン */}
+      {!paletteVisible && (
         <button
           className="palette-toggle"
-          onClick={() => { setPaletteVisible((v) => !v); savePaletteSettings(); }}
-          title={paletteVisible ? 'ツールを非表示' : 'ツールを表示'}
+          onClick={() => { setPaletteVisible(true); savePaletteSettings(); }}
+          title="ツールを表示"
         >
-          {paletteVisible ? 'Hide' : 'Show'}
+          Show
         </button>
-        <button
-          className="palette-reset"
-          onClick={resetPaletteToDefault}
-          title="パレットをリセット"
-        >
-          Reset
-        </button>
-      </div>
+      )}
 
+      {/* ツールバー */}
       <div
         ref={toolbarRef}
         className="toolbar"
@@ -824,6 +801,28 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
         onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
       >
         {/* ボタンのない領域をドラッグすると移動します（ハンドル不要） */}
+        {/* パレット操作（移動モード切替・非表示） */}
+        <div className="tool-group">
+          <button
+            className={`tool-btn ${isMovingMode ? 'active' : ''}`}
+            onClick={() => setIsMovingMode((m) => !m)}
+            title={isMovingMode ? '移動モード: ON（パレットをドラッグ可能）' : '移動モード: OFF（クリックしてON）'}
+            style={{ fontSize: '1.2rem', padding: '0.4rem' }}
+          >
+            {isMovingMode ? '🔓' : '🔒'}
+          </button>
+          <button
+            className="tool-btn"
+            onClick={() => { setPaletteVisible(false); savePaletteSettings(); }}
+            title="ツールを非表示"
+            style={{ fontSize: '0.9rem', fontWeight: 'bold' }}
+          >
+            Hide
+          </button>
+        </div>
+
+        <div className="divider" />
+
         {/* モード選択 */}
         <div className="tool-group">
           <button
@@ -1088,27 +1087,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
           border-radius: 8px;
           cursor: pointer;
         }
-        .palette-controls { position: absolute; right: 16px; top: 12px; z-index:2100; display:flex; gap:8px; }
-        .move-mode-btn {
-          background: rgba(255,255,255,0.9);
-          border: 2px solid #e2e8f0;
-          padding: 6px 10px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 16px;
-          transition: all 0.2s ease;
-        }
-        .move-mode-btn.active {
-          background: #fbbf24;
-          border-color: #f59e0b;
-          box-shadow: 0 0 8px rgba(245,158,11,0.5);
-        }
-        .move-mode-btn:hover {
-          background: rgba(255,255,255,1);
-          border-color: #cbd5e1;
-        }
-        .palette-reset { background:#ef4444; color:white; border:none; padding:6px 8px; border-radius:8px; cursor:pointer }
-        .palette-reset:hover { background:#dc2626 }
+
         .palette-preview {
           width: auto;
           height: auto;
