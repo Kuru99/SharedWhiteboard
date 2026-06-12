@@ -407,11 +407,19 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
     setElements((prev) => {
       const index = prev.findIndex((el) => el.id === id);
       if (index !== -1) {
-        const updated = { ...prev[index] } as LineElement;
-        updated.points = [...updated.points, { x: x1, y: y1 }];
-        const next = [...prev];
-        next[index] = updated;
-        return next;
+        const line = prev[index] as LineElement;
+        const lastPoint = line.points[line.points.length - 1];
+        
+        // localStorageから読み込み済みの場合、サーバーからの履歴リプレイと重複するため、
+        // 線の終端が繋がる場合のみ追加する（既に未来の点が含まれている場合は無視）
+        if (lastPoint && lastPoint.x === x0 && lastPoint.y === y0) {
+          const updated = { ...line };
+          updated.points = [...line.points, { x: x1, y: y1 }];
+          const next = [...prev];
+          next[index] = updated;
+          return next;
+        }
+        return prev;
       } else {
         return [
           ...prev,
@@ -432,10 +440,13 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   const handleIncomingText = (data: any) => {
     const { id, x, y, text, color: textColor, fontSize } = data;
-    setElements((prev) => [
-      ...prev,
-      { id, type: 'text', x, y, text, color: textColor, fontSize },
-    ]);
+    setElements((prev) => {
+      if (prev.some((el) => el.id === id)) return prev;
+      return [
+        ...prev,
+        { id, type: 'text', x, y, text, color: textColor, fontSize },
+      ];
+    });
   };
 
   const handleIncomingUndo = (id: string) => {
