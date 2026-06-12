@@ -5,7 +5,22 @@ import './App.css'
 
 function App() {
   const [selectedBoardId, setSelectedBoardId] = useState(() => {
-    return sessionStorage.getItem('sharedwhiteboard_session_board') || ''
+    let isReload = false;
+    if (window.performance) {
+      const navEntries = window.performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+      if (navEntries.length > 0) {
+        isReload = navEntries[0].type === "reload";
+      } else if (window.performance.navigation) {
+        isReload = window.performance.navigation.type === 1;
+      }
+    }
+
+    if (isReload) {
+      return sessionStorage.getItem('sharedwhiteboard_session_board') || '';
+    } else {
+      sessionStorage.removeItem('sharedwhiteboard_session_board');
+      return '';
+    }
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(false)
