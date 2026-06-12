@@ -5,17 +5,18 @@ import './App.css'
 
 function App() {
   const [selectedBoardId, setSelectedBoardId] = useState(() => {
-    return localStorage.getItem('sharedwhiteboard_last_board') || ''
+    return sessionStorage.getItem('sharedwhiteboard_session_board') || ''
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (selectedBoardId) {
-      localStorage.setItem('sharedwhiteboard_last_board', selectedBoardId)
+      sessionStorage.setItem('sharedwhiteboard_session_board', selectedBoardId)
     } else {
-      localStorage.removeItem('sharedwhiteboard_last_board')
+      sessionStorage.removeItem('sharedwhiteboard_session_board')
     }
   }, [selectedBoardId])
+
   return (
     <div className="app-container">
       <header className="app-header">
