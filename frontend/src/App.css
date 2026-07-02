@@ -270,3 +270,42 @@ main {
   background-color: #e2e8f0;
   color: #1e293b;
 }
+
+/* ロールバッジ */
+.role-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.role-badge.editor {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.role-badge.viewer {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+}
+
+/* ヘッダー招待ボタン */
+.invite-header-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #2563eb;
+  background: transparent;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.invite-header-btn:hover {
+  background: #2563eb;
+  color: white;
+}

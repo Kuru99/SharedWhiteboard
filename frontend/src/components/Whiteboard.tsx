@@ -31,9 +31,11 @@ const colors = ['#000000', '#eb4d4b', '#6ab04c', '#22a6b3', '#be2edd', '#f0932b'
 
 interface WhiteboardProps {
   boardId: string;
+  accessToken?: string;
+  onRoleUpdate?: (role: 'editor' | 'viewer') => void;
 }
 
-const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
+const Whiteboard: React.FC<WhiteboardProps> = ({ boardId, accessToken = '', onRoleUpdate }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -47,6 +49,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const [color, setColor] = useState('#000000');
   const [width, setWidth] = useState(3);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  // ロール（editor / viewer）
+  const [role, setRole] = useState<'editor' | 'viewer'>('editor');
 
   // 描画・パン用の内部状態
   const [isDrawing, setIsDrawing] = useState(false);
@@ -269,12 +273,20 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
     const wsHost = getWebSocketHost();
     connectionIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const socket = new WebSocket(`${wsHost}/ws?boardId=${boardId}`);
+    const tokenParam = accessToken ? `&accessToken=${encodeURIComponent(accessToken)}` : '';
+    const socket = new WebSocket(`${wsHost}/ws?boardId=${boardId}${tokenParam}`);
     socketRef.current = socket;
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        // ロールメッセージを処理
+        if (data.type === 'role') {
+          const r = data.role as 'editor' | 'viewer';
+          setRole(r);
+          if (onRoleUpdate) onRoleUpdate(r);
+          return;
+        }
         // 同じ接続からの即時エコーだけ無視し、再接続時の履歴は受け取る
         if (data.clientId === clientIdRef.current && data.connectionId === connectionIdRef.current) return;
 
@@ -457,6 +469,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     // テキスト入力中は他操作を受け付けない
     if (textInput) return;
+    // 閲覧者は描画不可
+    if (role === 'viewer') return;
 
     const isTouch = 'touches' in e;
 
@@ -509,6 +523,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (tool !== 'text') return;
     if (textInput) return; // すでに配置中の場合は何もしない
+    if (role === 'viewer') return; // 閲覧者はテキスト入力不可
 
     const pos = getClientCoordinates(e);
     const worldPos = getWorldCoordinates(e);
@@ -774,6 +789,27 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
   return (
     <div className="whiteboard-wrapper">
+      {/* 閲覧者バナー */}
+      {role === 'viewer' && (
+        <div style={{
+          position: 'absolute',
+          bottom: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(124,58,237,0.92)',
+          color: '#fff',
+          padding: '8px 20px',
+          borderRadius: '20px',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          zIndex: 3000,
+          pointerEvents: 'none',
+          boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
+          letterSpacing: '0.02em',
+        }}>
+          👁 閲覧専用モード（描画はできません）
+        </div>
+      )}
       {/* 非表示時の再表示ボタン */}
       {!paletteVisible && (
         <button
@@ -844,6 +880,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
             className={`tool-btn ${tool === 'pencil' ? 'active' : ''}`}
             onClick={() => setTool('pencil')}
             title="ペン"
+            disabled={role === 'viewer'}
           >
             ✏️
           </button>
@@ -851,6 +888,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
             className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
             onClick={() => setTool('eraser')}
             title="消しゴム"
+            disabled={role === 'viewer'}
           >
             🧽
           </button>
@@ -858,6 +896,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
             className={`tool-btn ${tool === 'text' ? 'active' : ''}`}
             onClick={() => setTool('text')}
             title="テキスト入力"
+            disabled={role === 'viewer'}
           >
             🔤
           </button>
@@ -911,13 +950,13 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId }) => {
 
         {/* 特殊操作 */}
         <div className="tool-group">
-          <button className="action-btn" onClick={handleUndo} title="元に戻す">
+          <button className="action-btn" onClick={handleUndo} title="元に戻す" disabled={role === 'viewer'}>
             ↩️ 元に戻す
           </button>
           <button className="action-btn" onClick={() => setPanOffset({ x: 0, y: 0 })} title="位置リセット">
             🎯 位置リセット
           </button>
-          <button className="clear-btn" onClick={handleClear} title="全消去">
+          <button className="clear-btn" onClick={handleClear} title="全消去" disabled={role === 'viewer'}>
             🗑️ 全消去
           </button>
         </div>
