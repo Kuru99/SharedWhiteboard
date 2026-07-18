@@ -4,7 +4,8 @@
 
 **SharedWhiteboard** は、Go と React(TypeScript) で実装されたリアルタイム共有ホワイトボードアプリです。
 複数ユーザーが同じボード上で同時に描画・操作でき、WebSocket と Redis Pub/Sub による低遅延同期を備えています。
-https://kuru99.github.io/SharedWhiteboard/
+※Raylwayの無料でしか動かない
+リンク:https://kuru99.github.io/SharedWhiteboard/
 
 ---
 
