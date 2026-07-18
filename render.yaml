@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: shared-whiteboard-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/boards
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: shared-whiteboard-redis
+          property: connectionString
+      - key: PORT
+        value: 8000
+
+  - type: redis
+    name: shared-whiteboard-redis
+    plan: free
+    ipAllowList: []
