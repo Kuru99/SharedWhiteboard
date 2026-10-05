@@ -7,7 +7,7 @@
 
 ※Renderの無料分でしか動かない（無料分を使い切るとボードの作成に失敗する）
 
-リンク:https://kuru99.github.io/SharedWhiteboard/
+公開サイト: https://kuru99.github.io/SharedWhiteboard/
 
 ---
 
@@ -30,4 +30,3 @@ MIT License
 ## 👤 作者
 
 - **kuru99**
-
