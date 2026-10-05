@@ -153,7 +153,7 @@ function App() {
           >
             ☰
           </button>
-          <h1>Shared Whiteboard</h1>
+          <h1>シェアホワ</h1>
         </div>
         <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {selectedBoardId && currentRole && (
@@ -211,7 +211,7 @@ function App() {
             />
           ) : (
             <div className="welcome-screen">
-              <h2>Shared Whiteboard へようこそ！</h2>
+              <h2>シェアホワ へようこそ！</h2>
               <p>左上の「☰」メニューを開いて、ホワイトボードを選択または新規作成してください。</p>
 
               <button
