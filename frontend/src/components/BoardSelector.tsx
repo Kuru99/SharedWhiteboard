@@ -13,7 +13,7 @@ interface Board {
 interface BoardSelectorProps {
   selectedBoardId: string;
   guestId: string;
-  onBoardSelect: (boardId: string, visibility?: string) => void;
+  onBoardSelect: (boardId: string, visibility?: 'public' | 'private') => void;
   onAccessTokenSet: (boardId: string, token: string) => void;
   onRoleUpdate: (role: 'editor' | 'viewer') => void;
 }

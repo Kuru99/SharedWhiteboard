@@ -24,6 +24,8 @@ function setAccessToken(boardId: string, token: string) {
   sessionStorage.setItem(`board_token_${boardId}`, token)
 }
 
+type BoardVisibility = 'public' | 'private'
+
 const guestId = getOrCreateGuestId()
 
 const getApiHost = () => {
@@ -56,8 +58,9 @@ function App() {
 
   // 招待URLの処理
   const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null)
-  const [joinModalBoard, setJoinModalBoard] = useState<{ id: string; title: string; visibility: string } | null>(null)
+  const [joinModalBoard, setJoinModalBoard] = useState<{ id: string; title: string; visibility: BoardVisibility } | null>(null)
   const [inviteModalBoardId, setInviteModalBoardId] = useState<string | null>(null)
+  const [selectedBoardVisibility, setSelectedBoardVisibility] = useState<BoardVisibility | null>(null)
 
   // 現在のボードのロール
   const [currentRole, setCurrentRole] = useState<'editor' | 'viewer' | null>(null)
@@ -98,6 +101,7 @@ function App() {
           setAccessToken(data.board.id, data.access_token)
           setCurrentRole(data.role)
           setSelectedBoardId(data.board.id)
+          setSelectedBoardVisibility(data.board.visibility === 'private' ? 'private' : 'public')
           alert(`「${data.board.title}」に${data.role === 'editor' ? '編集者' : '閲覧者'}として参加しました！`)
         } else {
           alert('招待リンクが無効または期限切れです。')
@@ -110,7 +114,7 @@ function App() {
     })()
   }, [pendingInviteToken])
 
-  const handleBoardSelect = useCallback(async (boardId: string, visibility?: string) => {
+  const handleBoardSelect = useCallback(async (boardId: string, visibility?: BoardVisibility) => {
     // プライベートボードかつトークンなし → 入室モーダルを表示
     if (visibility === 'private' && !getAccessToken(boardId)) {
       // ボード情報を取得して表示
@@ -119,7 +123,11 @@ function App() {
         const res = await fetch(`${apiHost}/api/boards/info?boardId=${boardId}`)
         if (res.ok) {
           const board = await res.json()
-          setJoinModalBoard({ id: board.id, title: board.title, visibility: board.visibility })
+          setJoinModalBoard({
+            id: board.id,
+            title: board.title,
+            visibility: board.visibility === 'private' ? 'private' : 'public',
+          })
         }
       } catch (e) {
         console.error('Failed to fetch board info:', e)
@@ -127,6 +135,11 @@ function App() {
       return
     }
     setSelectedBoardId(boardId)
+    if (visibility) {
+      setSelectedBoardVisibility(visibility)
+    } else {
+      setSelectedBoardVisibility(null)
+    }
     if (window.innerWidth <= 900) setSidebarOpen(false)
   }, [])
 
@@ -135,8 +148,24 @@ function App() {
     setCurrentRole(role)
     setJoinModalBoard(null)
     setSelectedBoardId(boardId)
+    setSelectedBoardVisibility('private')
     if (window.innerWidth <= 900) setSidebarOpen(false)
   }, [])
+
+  useEffect(() => {
+    if (!selectedBoardId || selectedBoardVisibility) return
+    ;(async () => {
+      try {
+        const apiHost = getApiHost()
+        const res = await fetch(`${apiHost}/api/boards/info?boardId=${selectedBoardId}`)
+        if (!res.ok) return
+        const board = await res.json()
+        setSelectedBoardVisibility(board.visibility === 'private' ? 'private' : 'public')
+      } catch (e) {
+        console.error('Failed to fetch selected board visibility:', e)
+      }
+    })()
+  }, [selectedBoardId, selectedBoardVisibility])
 
   const handleRoleUpdate = useCallback((role: 'editor' | 'viewer') => {
     setCurrentRole(role)
@@ -164,7 +193,7 @@ function App() {
               {currentRole === 'editor' ? '✏️ 編集者' : '👁 閲覧者'}
             </span>
           )}
-          {selectedBoardId && currentRole === 'editor' && (
+          {selectedBoardId && selectedBoardVisibility === 'private' && currentRole === 'editor' && (
             <button
               className="invite-header-btn"
               onClick={() => setInviteModalBoardId(selectedBoardId)}
@@ -174,7 +203,10 @@ function App() {
             </button>
           )}
           <button
-            onClick={() => setSelectedBoardId('')}
+            onClick={() => {
+              setSelectedBoardId('')
+              setSelectedBoardVisibility(null)
+            }}
             title="ホームに戻る"
             style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#f1f5f9', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
