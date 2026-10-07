@@ -216,14 +216,14 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
               onClick={() => setNewBoardVisibility('public')}
               type="button"
             >
-              🌐 パブリック
+              パブリック
             </button>
             <button
               className={`vis-btn ${newBoardVisibility === 'private' ? 'active' : ''}`}
               onClick={() => setNewBoardVisibility('private')}
               type="button"
             >
-              🔒 プライベート
+              プライベート
             </button>
           </div>
           {newBoardVisibility === 'private' && (
