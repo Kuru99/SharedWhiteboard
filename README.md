@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**シェアホワ** は、Go と React(TypeScript) で実装されたリアルタイム共有ホワイトボードアプリです。
+**シェアホワ** は、Go と React(TypeScript) で実装されたリアルタイム共有ホワイトボードアプリです。URLを共有するだけで使えます。
 複数ユーザーが同じボード上で同時に描画・操作でき、WebSocket と Redis Pub/Sub による低遅延同期を備えています。
 
 ※Renderの無料分でしか動かないので注意（無料分を使い切るとボードの作成に失敗する）
