@@ -5,7 +5,7 @@
 **シェアホワ** は、Go と React(TypeScript) で実装されたリアルタイム共有ホワイトボードアプリです。
 複数ユーザーが同じボード上で同時に描画・操作でき、WebSocket と Redis Pub/Sub による低遅延同期を備えています。
 
-※Renderの無料分でしか動かない（無料分を使い切るとボードの作成に失敗する）
+※Renderの無料分でしか動かないので注意（無料分を使い切るとボードの作成に失敗する）
 
 公開サイト: https://kuru99.github.io/SharedWhiteboard/
 
