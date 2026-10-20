@@ -55,6 +55,7 @@ function App() {
   })
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(false)
+  const [selectedBoardTitle, setSelectedBoardTitle] = useState('')
 
   // 招待URLの処理
   const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null)
@@ -101,6 +102,7 @@ function App() {
           setAccessToken(data.board.id, data.access_token)
           setCurrentRole(data.role)
           setSelectedBoardId(data.board.id)
+          setSelectedBoardTitle(data.board.title || '')
           setSelectedBoardVisibility(data.board.visibility === 'private' ? 'private' : 'public')
           alert(`「${data.board.title}」に${data.role === 'editor' ? '編集者' : '閲覧者'}として参加しました！`)
         } else {
@@ -114,7 +116,7 @@ function App() {
     })()
   }, [pendingInviteToken])
 
-  const handleBoardSelect = useCallback(async (boardId: string, visibility?: BoardVisibility) => {
+  const handleBoardSelect = useCallback(async (boardId: string, visibility?: BoardVisibility, title?: string) => {
     // プライベートボードかつトークンなし → 入室モーダルを表示
     if (visibility === 'private' && !getAccessToken(boardId)) {
       // ボード情報を取得して表示
@@ -135,6 +137,7 @@ function App() {
       return
     }
     setSelectedBoardId(boardId)
+    setSelectedBoardTitle(title || '')
     if (visibility) {
       setSelectedBoardVisibility(visibility)
     } else {
@@ -148,9 +151,10 @@ function App() {
     setCurrentRole(role)
     setJoinModalBoard(null)
     setSelectedBoardId(boardId)
+    setSelectedBoardTitle(joinModalBoard?.title || '')
     setSelectedBoardVisibility('private')
     if (window.innerWidth <= 900) setSidebarOpen(false)
-  }, [])
+  }, [joinModalBoard])
 
   useEffect(() => {
     if (!selectedBoardId || selectedBoardVisibility) return
@@ -160,6 +164,7 @@ function App() {
         const res = await fetch(`${apiHost}/api/boards/info?boardId=${selectedBoardId}`)
         if (!res.ok) return
         const board = await res.json()
+        setSelectedBoardTitle(board.title || '')
         setSelectedBoardVisibility(board.visibility === 'private' ? 'private' : 'public')
       } catch (e) {
         console.error('Failed to fetch selected board visibility:', e)
@@ -183,6 +188,11 @@ function App() {
             ☰
           </button>
           <h1>シェアホワ</h1>
+          {selectedBoardId && (
+            <span className="board-title-chip" title={selectedBoardTitle || selectedBoardId}>
+              {selectedBoardTitle || selectedBoardId}
+            </span>
+          )}
         </div>
         <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {selectedBoardId && currentRole && (
@@ -205,6 +215,7 @@ function App() {
           <button
             onClick={() => {
               setSelectedBoardId('')
+              setSelectedBoardTitle('')
               setSelectedBoardVisibility(null)
             }}
             title="ホームに戻る"

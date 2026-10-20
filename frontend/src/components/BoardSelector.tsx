@@ -13,7 +13,7 @@ interface Board {
 interface BoardSelectorProps {
   selectedBoardId: string;
   guestId: string;
-  onBoardSelect: (boardId: string, visibility?: 'public' | 'private') => void;
+  onBoardSelect: (boardId: string, visibility?: 'public' | 'private', title?: string) => void;
   onAccessTokenSet: (boardId: string, token: string) => void;
   onRoleUpdate: (role: 'editor' | 'viewer') => void;
 }
@@ -103,7 +103,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
             board_id: data.board.id,
           });
         } else {
-          onBoardSelect(newBoard.id, newBoard.visibility);
+          onBoardSelect(newBoard.id, newBoard.visibility, newBoard.title);
         }
       } else {
         const errorText = await response.text();
@@ -134,7 +134,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
         if (selectedBoardId === boardId && boards.length > 1) {
           const nextBoard = boards.find((b) => b.id !== boardId);
           if (nextBoard) {
-            onBoardSelect(nextBoard.id, nextBoard.visibility);
+            onBoardSelect(nextBoard.id, nextBoard.visibility, nextBoard.title);
           }
         }
       } else {
@@ -192,7 +192,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
           <button
             className="btn-go-board"
             onClick={() => {
-              onBoardSelect(createdBoardInfo.board_id, 'private');
+              onBoardSelect(createdBoardInfo.board_id, 'private', createdBoardInfo.title);
               setCreatedBoardInfo(null);
             }}
           >
@@ -248,7 +248,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
             <div
               key={board.id}
               className={`board-item ${selectedBoardId === board.id ? 'active' : ''}`}
-              onClick={() => onBoardSelect(board.id, board.visibility)}
+              onClick={() => onBoardSelect(board.id, board.visibility, board.title)}
             >
               <span className="board-visibility-icon">
                 {board.visibility === 'private' ? '🔒' : '🌐'}
