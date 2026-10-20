@@ -18,6 +18,12 @@ interface BoardSelectorProps {
   onRoleUpdate: (role: 'editor' | 'viewer') => void;
 }
 
+const getOwnerTokenKey = (boardId: string) =>
+  `sharedwhiteboard_owner_token_${boardId}`;
+
+const getOwnerToken = (boardId: string): string =>
+  localStorage.getItem(getOwnerTokenKey(boardId)) || '';
+
 const BoardSelector: React.FC<BoardSelectorProps> = ({
   selectedBoardId,
   guestId,
@@ -82,6 +88,12 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
 
       if (response.ok) {
         const data = await response.json();
+        if (typeof data.owner_token === 'string' && data.owner_token) {
+          localStorage.setItem(
+            getOwnerTokenKey(data.board.id),
+            data.owner_token
+          );
+        }
         const newBoard: Board = {
           ...data.board,
           visibility: data.board.visibility || 'public',
@@ -126,7 +138,10 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
       const response = await fetch(`${apiHost}/api/boards/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ boardId }),
+        body: JSON.stringify({
+          boardId,
+          owner_token: getOwnerToken(boardId),
+        }),
       });
 
       if (response.ok) {

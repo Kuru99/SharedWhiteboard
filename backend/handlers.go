@@ -117,6 +117,8 @@ func handleCreateBoard(w http.ResponseWriter, r *http.Request) {
 		req.OwnerID = "anonymous"
 	}
 
+	// 作成者専用トークンを生成する
+	ownerToken := generateToken(32)
 	boardId := uuid.New().String()
 	board := Board{
 		ID:         boardId,
@@ -147,6 +149,14 @@ func handleCreateBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 作成者トークンのハッシュを保存する
+	if err := saveOwnerToken(boardId, ownerToken); err != nil {
+		log.Printf("Failed to save owner token: %v", err)
+		rdb.Del(ctx, metaKey)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	// 全ボードインデックスに追加
 	rdb.SAdd(ctx, allBoardsKey, boardId)
 
@@ -170,6 +180,7 @@ func handleCreateBoard(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"board":        board,
 		"access_token": accessToken,
+		"owner_token":  ownerToken,
 	})
 }
 
@@ -352,7 +363,7 @@ func handleUseInvite(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleDeleteBoard はボードを削除する
+// handleDeleteBoard は作成者のみボードを削除できるようにする
 func handleDeleteBoard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -362,7 +373,8 @@ func handleDeleteBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		BoardId string `json:"boardId"`
+		BoardId    string `json:"boardId"`
+		OwnerToken string `json:"owner_token"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -370,12 +382,49 @@ func handleDeleteBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.BoardId == "" || req.OwnerToken == "" {
+		http.Error(w, "Board ID and owner token are required", http.StatusBadRequest)
+		return
+	}
+
+	board, err := getBoard(req.BoardId)
+	if err != nil {
+		log.Printf("Failed to get board: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if board == nil {
+		http.Error(w, "Board not found", http.StatusNotFound)
+		return
+	}
+
+	if !verifyOwnerToken(req.BoardId, req.OwnerToken) {
+		http.Error(w, "Forbidden: only the creator can delete this board", http.StatusForbidden)
+		return
+	}
+
 	metaKey := fmt.Sprintf(boardMetaKey, req.BoardId)
 	stateKey := fmt.Sprintf(boardStateKey, req.BoardId)
-	rdb.Del(ctx, metaKey)
-	rdb.Del(ctx, stateKey)
-	rdb.SRem(ctx, boardsIndexKey, req.BoardId)
-	rdb.SRem(ctx, allBoardsKey, req.BoardId)
+
+	ownerKey := fmt.Sprintf(ownerTokenKey, req.BoardId)
+
+	if err := rdb.Del(ctx, metaKey, stateKey, ownerKey).Err(); err != nil {
+		log.Printf("Failed to delete board data: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := rdb.SRem(ctx, boardsIndexKey, req.BoardId).Err(); err != nil {
+		log.Printf("Failed to remove board from index: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := rdb.SRem(ctx, allBoardsKey, req.BoardId).Err(); err != nil {
+		log.Printf("Failed to remove board from all boards index: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -151,4 +152,31 @@ func createSession(boardId string, role Role, guestId string) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+// hashOwnerToken は作成者トークンのハッシュを計算する
+func hashOwnerToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+// saveOwnerToken は作成者トークンのハッシュを保存する
+func saveOwnerToken(boardId, token string) error {
+	key := fmt.Sprintf(ownerTokenKey, boardId)
+	return rdb.Set(ctx, key, hashOwnerToken(token), 0).Err()
+}
+
+// verifyOwnerToken は作成者トークンを検証する
+func verifyOwnerToken(boardId, token string) bool {
+	if token == "" {
+		return false
+	}
+
+	key := fmt.Sprintf(ownerTokenKey, boardId)
+	storedHash, err := rdb.Get(ctx, key).Result()
+	if err != nil {
+		return false
+	}
+
+	return storedHash == hashOwnerToken(token)
 }

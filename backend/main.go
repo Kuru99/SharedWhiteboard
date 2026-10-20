@@ -21,6 +21,7 @@ var (
 	boardMetaKey   = "whiteboard-board:%s"   // ボードのメタデータ（%sはboardId）
 	sessionKey     = "whiteboard-session:%s" // アクセスセッション（%sはtoken）
 	inviteTokenKey = "whiteboard-invite:%s"  // 招待トークン（%sはtoken）
+	ownerTokenKey  = "whiteboard-owner:%s"   // 作成者トークンのハッシュ（%sはboardId）
 	channelName    = "whiteboard-draw"
 )
 
