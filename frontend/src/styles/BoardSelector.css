@@ -306,6 +306,9 @@
   padding: 0;
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .board-item:hover .btn-delete {
