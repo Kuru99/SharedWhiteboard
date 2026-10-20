@@ -810,157 +810,158 @@ const Whiteboard: React.FC<WhiteboardProps> = ({ boardId, accessToken = '', onRo
           👁 閲覧専用モード（描画はできません）
         </div>
       )}
-      {/* 非表示時の再表示ボタン */}
-      {!paletteVisible && (
-        <button
-          className="palette-toggle"
-          onClick={() => { setPaletteVisible(true); savePaletteSettings(); }}
-          title="ツールを表示"
-          style={{ background: '#2563eb', color: 'white', fontWeight: 'bold', border: 'none' }}
-        >
-          表示
-        </button>
-      )}
+      {role !== 'viewer' && (
+        <>
+          {/* 非表示時の再表示ボタン */}
+          {!paletteVisible && (
+            <button
+              className="palette-toggle"
+              onClick={() => { setPaletteVisible(true); savePaletteSettings(); }}
+              title="ツールを表示"
+              style={{ background: '#2563eb', color: 'white', fontWeight: 'bold', border: 'none' }}
+            >
+              表示
+            </button>
+          )}
 
-      {/* ツールバー */}
-      <div
-        ref={toolbarRef}
-        className="toolbar"
-        style={(() => {
-          const pos = palettePosRef.current;
-          const style: React.CSSProperties = {};
-          if (!paletteVisible) {
-            style.display = 'none';
-          }
-          // ensure values include px units when numeric
-          if (pos.left === null) {
-            style.left = '50%';
-            style.transform = `translateX(-50%) scale(${paletteScale})`;
-            style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
-          } else {
-            style.left = typeof pos.left === 'number' ? `${pos.left}px` : (pos.left as any);
-            style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
-            style.transform = `translate(0,0) scale(${paletteScale})`;
-          }
-          // make toolbar appear above header/other UI
-          style.zIndex = 2000;
-          return style;
-        })()}
-        onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
-      >
-        {/* ボタンのない領域をドラッグすると移動します（ハンドル不要） */}
-        {/* パレット操作（移動モード切替・非表示） */}
-        <div className="tool-group">
-          <button
-            className={`tool-btn ${isMovingMode ? 'active' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMovingMode((m) => !m);
-            }}
-            title={isMovingMode ? '移動モード: ON（パレットをドラッグ可能）' : '移動モード: OFF（クリックしてON）'}
-            style={{ fontSize: '1.2rem', padding: '0.4rem' }}
+          {/* ツールバー */}
+          <div
+            ref={toolbarRef}
+            className="toolbar"
+            style={(() => {
+              const pos = palettePosRef.current;
+              const style: React.CSSProperties = {};
+              if (!paletteVisible) {
+                style.display = 'none';
+              }
+              // ensure values include px units when numeric
+              if (pos.left === null) {
+                style.left = '50%';
+                style.transform = `translateX(-50%) scale(${paletteScale})`;
+                style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
+              } else {
+                style.left = typeof pos.left === 'number' ? `${pos.left}px` : (pos.left as any);
+                style.top = typeof pos.top === 'number' ? `${pos.top}px` : (pos.top as any);
+                style.transform = `translate(0,0) scale(${paletteScale})`;
+              }
+              // make toolbar appear above header/other UI
+              style.zIndex = 2000;
+              return style;
+            })()}
+            onPointerDown={(e) => { if (shouldStartDrag(e)) startPaletteDrag(e); }}
           >
-            <span key={isMovingMode ? 'on' : 'off'}>{isMovingMode ? '🔓' : '🔒'}</span>
-          </button>
-          <button
-            className="tool-btn"
-            onClick={() => { setPaletteVisible(false); savePaletteSettings(); }}
-            title="ツールを非表示"
-            style={{ fontSize: '0.9rem', fontWeight: 'bold', background: '#2563eb', color: 'white' }}
-          >
-            非表示
-          </button>
-        </div>
-
-        <div className="divider" />
-
-        {/* モード選択 */}
-        <div className="tool-group">
-          <button
-            className={`tool-btn ${tool === 'pencil' ? 'active' : ''}`}
-            onClick={() => setTool('pencil')}
-            title="ペン"
-            disabled={role === 'viewer'}
-          >
-            ✏️
-          </button>
-          <button
-            className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
-            onClick={() => setTool('eraser')}
-            title="消しゴム"
-            disabled={role === 'viewer'}
-          >
-            🧽
-          </button>
-          <button
-            className={`tool-btn ${tool === 'text' ? 'active' : ''}`}
-            onClick={() => setTool('text')}
-            title="テキスト入力"
-            disabled={role === 'viewer'}
-          >
-            🔤
-          </button>
-        </div>
-
-        <div className="divider" />
-
-        {/* サイズ操作 */}
-        <div className="tool-group">
-          <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.max(0.6, s - 0.1))} title="小さく" aria-label="縮小">
-            −
-          </button>
-          <span style={{ fontSize: '0.85rem', color: '#475569' }}>{Math.round(paletteScale * 100)}%</span>
-          <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.min(1.6, s + 0.1))} title="大きく" aria-label="拡大">
-            ＋
-          </button>
-        </div>
-
-        <div className="divider" />
-
-        {/* 色選択 (消しゴムモード以外で表示) */}
-        {tool !== 'eraser' && (
-          <div className="tool-group">
-            {colors.map((c) => (
+            {/* ボタンのない領域をドラッグすると移動します（ハンドル不要） */}
+            {/* パレット操作（移動モード切替・非表示） */}
+            <div className="tool-group">
               <button
-                key={c}
-                className={`color-btn ${color === c ? 'active' : ''}`}
-                style={{ backgroundColor: c }}
-                onClick={() => setColor(c)}
+                className={`tool-btn ${isMovingMode ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMovingMode((m) => !m);
+                }}
+                title={isMovingMode ? '移動モード: ON（パレットをドラッグ可能）' : '移動モード: OFF（クリックしてON）'}
+                style={{ fontSize: '1.2rem', padding: '0.4rem' }}
+              >
+                <span key={isMovingMode ? 'on' : 'off'}>{isMovingMode ? '🔓' : '🔒'}</span>
+              </button>
+              <button
+                className="tool-btn"
+                onClick={() => { setPaletteVisible(false); savePaletteSettings(); }}
+                title="ツールを非表示"
+                style={{ fontSize: '0.9rem', fontWeight: 'bold', background: '#2563eb', color: 'white' }}
+              >
+                非表示
+              </button>
+            </div>
+
+            <div className="divider" />
+
+            {/* モード選択 */}
+            <div className="tool-group">
+              <button
+                className={`tool-btn ${tool === 'pencil' ? 'active' : ''}`}
+                onClick={() => setTool('pencil')}
+                title="ペン"
+              >
+                ✏️
+              </button>
+              <button
+                className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
+                onClick={() => setTool('eraser')}
+                title="消しゴム"
+              >
+                🧽
+              </button>
+              <button
+                className={`tool-btn ${tool === 'text' ? 'active' : ''}`}
+                onClick={() => setTool('text')}
+                title="テキスト入力"
+              >
+                🔤
+              </button>
+            </div>
+
+            <div className="divider" />
+
+            {/* サイズ操作 */}
+            <div className="tool-group">
+              <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.max(0.6, s - 0.1))} title="小さく" aria-label="縮小">
+                −
+              </button>
+              <span style={{ fontSize: '0.85rem', color: '#475569' }}>{Math.round(paletteScale * 100)}%</span>
+              <button className="tool-btn scale-btn" onClick={() => setPaletteScale((s) => Math.min(1.6, s + 0.1))} title="大きく" aria-label="拡大">
+                ＋
+              </button>
+            </div>
+
+            <div className="divider" />
+
+            {/* 色選択 (消しゴムモード以外で表示) */}
+            {tool !== 'eraser' && (
+              <div className="tool-group">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    className={`color-btn ${color === c ? 'active' : ''}`}
+                    style={{ backgroundColor: c }}
+                    onClick={() => setColor(c)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="divider" />
+
+            {/* ペンの太さ / フォントサイズ */}
+            <div className="tool-group">
+              <input
+                type="range"
+                min="2"
+                max="15"
+                value={width}
+                onChange={(e) => setWidth(parseInt(e.target.value))}
+                className="width-slider"
               />
-            ))}
+              <span className="width-label">{tool === 'text' ? `${width * 5}px` : `${width}px`}</span>
+            </div>
+
+            <div className="divider" />
+
+            {/* 特殊操作 */}
+            <div className="tool-group">
+              <button className="action-btn" onClick={handleUndo} title="元に戻す">
+                ↩️ 元に戻す
+              </button>
+              <button className="action-btn" onClick={() => setPanOffset({ x: 0, y: 0 })} title="位置リセット">
+                🎯 位置リセット
+              </button>
+              <button className="clear-btn" onClick={handleClear} title="全消去">
+                🗑️ 全消去
+              </button>
+            </div>
           </div>
-        )}
-
-        <div className="divider" />
-
-        {/* ペンの太さ / フォントサイズ */}
-        <div className="tool-group">
-          <input
-            type="range"
-            min="2"
-            max="15"
-            value={width}
-            onChange={(e) => setWidth(parseInt(e.target.value))}
-            className="width-slider"
-          />
-          <span className="width-label">{tool === 'text' ? `${width * 5}px` : `${width}px`}</span>
-        </div>
-
-        <div className="divider" />
-
-        {/* 特殊操作 */}
-        <div className="tool-group">
-          <button className="action-btn" onClick={handleUndo} title="元に戻す" disabled={role === 'viewer'}>
-            ↩️ 元に戻す
-          </button>
-          <button className="action-btn" onClick={() => setPanOffset({ x: 0, y: 0 })} title="位置リセット">
-            🎯 位置リセット
-          </button>
-          <button className="clear-btn" onClick={handleClear} title="全消去" disabled={role === 'viewer'}>
-            🗑️ 全消去
-          </button>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* キャンバス */}
       <canvas
