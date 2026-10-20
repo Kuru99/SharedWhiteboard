@@ -309,10 +309,10 @@
 }
 
 .board-item:hover .btn-delete {
-  /* display: flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: #ef4444; */
+  color: #ef4444; 
   background: #fee2e2;
 }
 
