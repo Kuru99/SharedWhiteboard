@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './AdminPage.css'
 
 type AdminBoard = {
@@ -21,7 +21,15 @@ const getApiHost = () => {
   return `${protocol}//${window.location.hostname}:8000`
 }
 
+
 export default function AdminPage() {
+  useEffect(() => {
+  document.body.classList.add('admin-body')
+
+  return () => {
+    document.body.classList.remove('admin-body')
+  }
+  }, [])
   const [token, setToken] = useState('')
   const [boards, setBoards] = useState<AdminBoard[]>([])
   const [search, setSearch] = useState('')

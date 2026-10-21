@@ -193,3 +193,19 @@
     align-items: flex-start;
   }
 }
+
+body.admin-body {
+  display: block;
+  place-items: initial;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body.admin-body #root {
+  height: auto;
+  min-height: 100vh;
+}
+
+body.admin-body .admin-page {
+  min-height: 100vh;
+}
