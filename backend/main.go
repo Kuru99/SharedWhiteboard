@@ -58,6 +58,7 @@ func main() {
 	http.HandleFunc("/api/boards/invite/create", corsMiddleware(handleCreateInvite))
 	http.HandleFunc("/api/boards/invite/use", corsMiddleware(handleUseInvite))
 	http.HandleFunc("/api/admin/boards/delete", corsMiddleware(handleAdminDeleteBoard))
+	http.HandleFunc("/api/admin/boards/list", corsMiddleware(handleAdminListBoards))
 
 	// WebSocket接続のエンドポイント
 	http.HandleFunc("/ws", handleConnections)

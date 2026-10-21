@@ -9,14 +9,8 @@ import (
 	"os"
 )
 
-// handleAdminDeleteBoard は管理者専用のボード削除処理。
-func handleAdminDeleteBoard(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// サーバーに管理者トークンが設定されていることを確認する。
+// authorizeAdminRequest は管理者トークンを検証する。
+func authorizeAdminRequest(w http.ResponseWriter, r *http.Request) bool {
 	configuredToken := os.Getenv("ADMIN_DELETE_TOKEN")
 	providedToken := r.Header.Get("X-Admin-Token")
 
@@ -26,6 +20,19 @@ func handleAdminDeleteBoard(w http.ResponseWriter, r *http.Request) {
 			[]byte(configuredToken),
 		) != 1 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return false
+	}
+
+	return true
+}
+
+// handleAdminDeleteBoard は管理者専用のボード削除処理。
+func handleAdminDeleteBoard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !authorizeAdminRequest(w, r) {
 		return
 	}
 
@@ -87,4 +94,63 @@ func handleAdminDeleteBoard(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status": "deleted",
 	})
+}
+
+// handleAdminListBoards は管理者専用の全ボード一覧を返す。
+func handleAdminListBoards(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if !authorizeAdminRequest(w, r) {
+		return
+	}
+
+	// 一覧をキャッシュさせない。
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+
+	// 公開・非公開を含む全ボードIDを取得する。
+	boardIDs, err := rdb.SMembers(ctx, allBoardsKey).Result()
+	if err != nil {
+		log.Printf("Admin list: failed to get board IDs: %v", err)
+		http.Error(w, "Failed to get board list", http.StatusInternalServerError)
+		return
+	}
+
+	// 管理画面に返す項目を限定する。
+	type adminBoardItem struct {
+		ID         string      `json:"id"`
+		Title      string      `json:"title"`
+		Visibility Visibility  `json:"visibility"`
+		CreatedAt  interface{} `json:"createdAt"`
+	}
+
+	boards := make([]adminBoardItem, 0, len(boardIDs))
+
+	for _, boardID := range boardIDs {
+		board, err := getBoard(boardID)
+		if err != nil {
+			log.Printf("Admin list: failed to get board %s: %v", boardID, err)
+			http.Error(w, "Failed to get board details", http.StatusInternalServerError)
+			return
+		}
+
+		// インデックスに残っている削除済みボードは一覧に含めない。
+		if board == nil {
+			continue
+		}
+
+		boards = append(boards, adminBoardItem{
+			ID:         board.ID,
+			Title:      board.Title,
+			Visibility: board.Visibility,
+			CreatedAt:  board.CreatedAt,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(boards); err != nil {
+		log.Printf("Admin list: failed to encode response: %v", err)
+	}
 }
