@@ -120,7 +120,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
       } else {
         const errorText = await response.text();
         console.error('Create board failed:', response.status, errorText);
-        alert(`ボード作成に失敗しました。あなたはこのボードの作成者ではありません。 (${response.status}: ${errorText})`);
+        alert(`ボード作成に失敗しました。(${response.status}: ${errorText})`);
       }
     } catch (error) {
       console.error('Failed to create board:', error);
@@ -154,7 +154,7 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
         }
       } else {
         const errorText = await response.text();
-        alert(`ボード削除に失敗しました (${response.status}: ${errorText})`);
+        alert(`ボード削除に失敗しました。あなたはこのボードの作成者ではありません。  (${response.status}: ${errorText})`);
       }
     } catch (error) {
       console.error('Failed to delete board:', error);
