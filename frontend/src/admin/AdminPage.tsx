@@ -21,15 +21,15 @@ const getApiHost = () => {
   return `${protocol}//${window.location.hostname}:8000`
 }
 
-useEffect(() => {
+
+export default function AdminPage() {
+  useEffect(() => {
   document.body.classList.add('admin-body')
 
   return () => {
     document.body.classList.remove('admin-body')
   }
-}, [])
-
-export default function AdminPage() {
+  }, [])
   const [token, setToken] = useState('')
   const [boards, setBoards] = useState<AdminBoard[]>([])
   const [search, setSearch] = useState('')
