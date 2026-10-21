@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './AdminPage.css'
 
 type AdminBoard = {
@@ -20,6 +20,14 @@ const getApiHost = () => {
 
   return `${protocol}//${window.location.hostname}:8000`
 }
+
+useEffect(() => {
+  document.body.classList.add('admin-body')
+
+  return () => {
+    document.body.classList.remove('admin-body')
+  }
+}, [])
 
 export default function AdminPage() {
   const [token, setToken] = useState('')
