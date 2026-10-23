@@ -130,40 +130,52 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
     }
   };
 
-  const handleDeleteBoard = async (boardId: string) => {
-    if (!confirm('このボードを削除してもよろしいですか？')) return;
+const handleDeleteBoard = async (boardId: string) => {
+  if (!confirm('このボードを削除してもよろしいですか？')) return;
 
-    try {
-      const apiHost = getApiHost();
-      const response = await fetch(`${apiHost}/api/boards/delete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          boardId,
-          owner_token: getOwnerToken(boardId),
-        }),
-      });
+  try {
+    const apiHost = getApiHost();
+    const response = await fetch(`${apiHost}/api/boards/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        boardId,
+        owner_token: getOwnerToken(boardId),
+      }),
+    });
 
-      if (response.ok) {
-        setBoards(boards.filter((b) => b.id !== boardId));
-        if (selectedBoardId === boardId && boards.length > 1) {
-          const nextBoard = boards.find((b) => b.id !== boardId);
-          if (nextBoard) {
-            onBoardSelect(nextBoard.id, nextBoard.visibility, nextBoard.title);
-          } else {
-      // 最後のボードを削除したらホーム画面へ戻る
-      onBoardSelect('');
-          }
+    if (response.ok) {
+      // 削除したボードを一覧から取り除く
+      setBoards(boards.filter((b) => b.id !== boardId));
+
+      // 削除したボードが現在選択中の場合
+      if (selectedBoardId === boardId) {
+        // ほかにボードが残っているか確認する
+        const nextBoard = boards.find((b) => b.id !== boardId);
+
+        if (nextBoard) {
+          // ほかのボードがあれば、そのボードへ切り替える
+          onBoardSelect(
+            nextBoard.id,
+            nextBoard.visibility,
+            nextBoard.title
+          );
+        } else {
+          // 最後のボードを削除したらホーム画面へ戻る
+          onBoardSelect('');
         }
-      } else {
-        const errorText = await response.text();
-        alert(`ボード削除に失敗しました。あなたはこのボードの作成者ではありません。  (${response.status}: ${errorText})`);
       }
-    } catch (error) {
-      console.error('Failed to delete board:', error);
-      alert('ボード削除に失敗しました');
+    } else {
+      const errorText = await response.text();
+      alert(
+        `ボード削除に失敗しました。あなたはこのボードの作成者ではありません。 (${response.status}: ${errorText})`
+      );
     }
-  };
+  } catch (error) {
+    console.error('Failed to delete board:', error);
+    alert('ボード削除に失敗しました');
+  }
+};
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
