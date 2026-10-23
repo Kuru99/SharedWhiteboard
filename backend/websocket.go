@@ -11,19 +11,17 @@ import (
 )
 
 var (
-	// WebSocketの設定
-```go
-upgrader = websocket.Upgrader{
-    CheckOrigin: func(r *http.Request) bool {
-        origin := r.Header.Get("Origin")
-        return origin == "https://kuru99.github.io"
-    },
-}
-```
+    // WebSocketの設定
+    upgrader = websocket.Upgrader{
+        CheckOrigin: func(r *http.Request) bool {
+            origin := r.Header.Get("Origin")
+            return origin == "https://kuru99.github.io"
+        },
+    }
 
-	// 接続されているクライアントを管理（ボードID -> クライアント接続）
-	boardClients = make(map[string]map[*websocket.Conn]bool)
-	clientsMu    sync.Mutex
+    // 接続されているクライアントを管理（ボードID -> クライアント接続）
+    boardClients = make(map[string]map[*websocket.Conn]bool)
+    clientsMu    sync.Mutex
 )
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
