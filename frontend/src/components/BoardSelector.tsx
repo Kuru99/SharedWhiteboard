@@ -150,6 +150,9 @@ const BoardSelector: React.FC<BoardSelectorProps> = ({
           const nextBoard = boards.find((b) => b.id !== boardId);
           if (nextBoard) {
             onBoardSelect(nextBoard.id, nextBoard.visibility, nextBoard.title);
+          } else {
+      // 最後のボードを削除したらホーム画面へ戻る
+      onBoardSelect('');
           }
         }
       } else {
